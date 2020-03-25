@@ -1,5 +1,5 @@
 # Traffic-Tracker
-Builr for tracking traffic during CoVID-19 pandemic lockdown.
+Built for tracking traffic during CoVID-19 pandemic lockdown.
 
 ### What does it do?
 
