@@ -12,3 +12,5 @@ Selenium
 ### How should I change the location?
 
 Go to Google Maps -> Browse to your location -> Select traffic layer --> Copy the _url_ and paste it in locations dictionary. That's it.
+
+![Alt](mehdipatnam.gif)
