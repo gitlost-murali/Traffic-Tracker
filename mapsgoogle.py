@@ -5,6 +5,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from datetime import datetime
 from PIL import Image
 from PIL import ImageFont
@@ -18,7 +19,10 @@ from glob import glob
 images_folder = 'images/'
 if not os.path.exists(images_folder):os.mkdir(images_folder)
 # Load the page
-driver = webdriver.Chrome()
+options = FirefoxOptions()
+options.add_argument("--headless")
+driver = webdriver.Firefox(options=options)
+#driver = webdriver.Chrome()
 
 locations = dict()
 locations['Yousufguda'] = 'https://www.google.com/maps/@17.4374383,78.4322134,16.75z/data=!5m1!1e1' 
@@ -75,7 +79,7 @@ def initiate():
 def write_on_image(text,imgname):
     img = Image.open(imgname)
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype('Pillow/Tests/fonts/FreeMono.ttf', 40)
+    font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf', 40)
     draw.rectangle((0, 0, 400, 80), fill='black')
     draw.text((0, 0), text, (512, 512, 255), font=font)
     img.save(imgname)
