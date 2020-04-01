@@ -1,0 +1,15 @@
+{
+    "HSR Layout": ["12.9185707", "77.6398468", "17z", "Asia/Kolkata"],
+    "Wall Street,NYC": ["40.7099252", "-74.0104159", "15z", "America/New_York"], 
+    "Brooklyn, NYC": ["40.6516003", "-73.9438822", "13.25z", "America/New_York"], 
+    "Majestic,Bgl": ["12.9752159", "77.5762682", "14.75z", "Asia/Kolkata"], 
+    "Mehdipatnam": ["17.391764", "78.4354326", "15.75z", "Asia/Kolkata"], 
+    "Yousufguda": ["17.4374383", "78.4322134", "16.75z", "Asia/Kolkata"],
+    "Birubari,Guwahati": ["26.1586146","91.7641719","14.5z","Asia/Kolkata"],
+    "Sundarbari,Guwahati": ["26.1416602","91.6521198","14z","Asia/Kolkata"],
+    "Pathsala":["26.4856535","91.1710924","13.5z","Asia/Kolkata"],
+    "NH27-Part1" : ["26.3991393","91.1939892","11.25z","Asia/Kolkata"],
+    "NH27-Part2" : ["26.495055","90.2250651","11.75z","Asia/Kolkata"],
+    "Hyderabad" : ["17.4021716","78.4139731","11z","Asia/Kolkata"],
+    "North_Highways" : ["27.3662156","76.8996282","8.25z","Asia/Kolkata"]    
+}

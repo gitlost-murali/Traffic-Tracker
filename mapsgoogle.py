@@ -6,8 +6,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from datetime import datetime, timezone
+from datetime import datetime
 import pytz
+import json
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
@@ -30,16 +31,17 @@ if not os.path.exists(gifs_folder):os.mkdir(gifs_folder)
 options = FirefoxOptions()
 options.add_argument("--headless")
 driver = webdriver.Firefox(options=options)
+width = 1920
+height = 1080
+driver.set_window_size(width, height)
 #driver = webdriver.Chrome()
 
 locations = dict()
-locations['Yousufguda'] = ['17.4374383','78.4322134','16.75z','Asia/Kolkata']
-locations['HSR Layout'] = ['12.9185707','77.6398468','17z','Asia/Kolkata']
-locations['Mehdipatnam'] = ['17.391764','78.4354326','15.75z','Asia/Kolkata']
-locations['Brooklyn, NYC'] = ['40.6516003','-73.9438822','13.25z','America/New_York']
-# Brooklyn https://www.google.com/maps/@40.6516003,-73.9438822,13.25z/data=!5m1!1e1
+with open('locations.json') as json_file: 
+    locations = json.load(json_file) 
 
-location = 'Brooklyn, NYC'
+location = 'NH27-Part2'
+timeinterval = 550
 locationurl = locations[location]
 
 import imageio 
@@ -58,6 +60,8 @@ def make_video(gifname,datepath):
 def initiate():
 
     '''
+    # Majestic https://www.google.com/maps/@12.9752159,77.5762682,14.75z/data=!5m1!1e1 
+    # Brooklyn https://www.google.com/maps/@40.6516003,-73.9438822,13.25z/data=!5m1!1e1
     yousufguda_location 
     'https://www.google.com/maps/@17.4374383,78.4322134,16.75z/data=!5m1!1e1'
     HSR Layout location
@@ -94,14 +98,14 @@ def write_on_image(text,imgname):
     img = Image.open(imgname)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf', 40)
-    draw.rectangle((0, 0, 400, 120), fill='black')
+    draw.rectangle((0, 0, 460, 120), fill='black')
     draw.text((0, 0), text, (512, 512, 255), font=font)
     img.save(imgname)
 
 while True:
     # timenow = datetime.now().strftime("%d-%b (%H:%M:%S.%f)")
     timenow = datetime.now().astimezone(pytz.timezone(f'{locations[location][-1]}')).strftime("%b %dth %H:%M")
-    datepath = datetime.now().strftime("%b-%dth")
+    datepath = datetime.now().astimezone(pytz.timezone(f'{locations[location][-1]}')).strftime("%b-%dth")
     print('Current Timestamp : ', timenow)
     try:
         initiate()
@@ -116,4 +120,4 @@ while True:
     write_on_image(timenow+f'\n{location}',f"{img_storefolder}/{timenow}.png")
     gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
     make_video(gifname,f'{datepath}_{location}')
-    time.sleep(240)
+    time.sleep(timeinterval)
