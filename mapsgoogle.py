@@ -111,7 +111,7 @@ def write_on_image(text,imgname):
     draw.text((0, 0), text, (512, 512, 255), font=font)
     img.save(imgname)
 
-def pixel_density(path, pixels, timestamp):
+def pixel_density(path, pixels, timestamp,datepath):
     img = np.array(Image.open(path).convert('RGB'))
     w,h,_ = img.shape
     d = {
@@ -122,9 +122,16 @@ def pixel_density(path, pixels, timestamp):
     for n,v in pixels.items():
         d[n] = (np.all(img == v, axis=2)).sum()
 
-    with open(f'{log}/logs.csv', 'a+', newline='') as f:
+    imgpath = os.path.basename(path).replace(".png","")
+
+    headerflag = False
+    if not os.path.exists(f'{log}/{datepath}_log.csv'): headerflag = True
+
+    with open(f'{log}/{datepath}_log.csv', 'a', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['ts', 'pixels', 'low', 'med', 'high', 'vhigh'])
+        if headerflag:  writer.writeheader()
         writer.writerow(d)
+        
 
     return d
 
@@ -144,7 +151,7 @@ while True:
     if not os.path.exists(img_storefolder):os.mkdir(img_storefolder)
     driver.save_screenshot(f"{img_storefolder}/{timenow}.png"); time.sleep(2)
     write_on_image(timenow+f'\n{location}',f"{img_storefolder}/{timenow}.png")
-    print(pixel_density(f"{img_storefolder}/{timenow}.png", pixels, timenow))
+    print(pixel_density(f"{img_storefolder}/{timenow}.png", pixels, timenow, datepath))
     # gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
     # make_video(gifname,f'{datepath}_{location}')
     time.sleep(timeinterval)
