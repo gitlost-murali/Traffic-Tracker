@@ -11,6 +11,6 @@ Selenium
 
 ### How should I change the location?
 
-Go to Google Maps -> Browse to your location -> Select traffic layer --> Copy the _url_ and paste it in locations dictionary. That's it.
+Go to Google Maps -> Browse to your location -> Select traffic layer --> Copy the _lat_,_long_,_zoom_ and paste it in `locations.json` and change `location` variable in `mapsgoogle.py`. That's it.
 
 ![Alt](mehdipatnam.gif)
