@@ -1,3 +1,4 @@
+import csv
 import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -6,15 +7,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver import ActionChains
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from datetime import datetime, timezone
+from datetime import datetime
+import numpy as np
 import pytz
+import json
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 import sys, os
 from glob import glob
 import moviepy.editor as mp
-# Reference : 
+# Reference :
 # https://stackoverflow.com/questions/41340792/change-google-map-web-page-with-selenium-python
 # https://stackoverflow.com/questions/18869365/a-watermark-inside-a-rectangle-which-filled-the-certain-color
 
@@ -30,24 +33,38 @@ if not os.path.exists(gifs_folder):os.mkdir(gifs_folder)
 options = FirefoxOptions()
 options.add_argument("--headless")
 driver = webdriver.Firefox(options=options)
+width = 1920
+height = 1080
+pixels = {
+    'low': [99, 214, 104],
+    'med': [255, 151, 77],
+    'high': [242, 60, 50],
+    'vhigh': [129, 31, 31]
+}
+basepixels = {
+    'roads':[255,255,255],
+    'highways':[255,242,175]
+}
+
+driver.set_window_size(width, height)
 #driver = webdriver.Chrome()
 
 locations = dict()
-locations['Yousufguda'] = ['17.4374383','78.4322134','16.75z','Asia/Kolkata']
-locations['HSR Layout'] = ['12.9185707','77.6398468','17z','Asia/Kolkata']
-locations['Mehdipatnam'] = ['17.391764','78.4354326','15.75z','Asia/Kolkata']
-locations['Brooklyn, NYC'] = ['40.6516003','-73.9438822','13.25z','America/New_York']
-# Brooklyn https://www.google.com/maps/@40.6516003,-73.9438822,13.25z/data=!5m1!1e1
+with open('locations.json') as json_file:
+    locations = json.load(json_file)
 
-location = 'Brooklyn, NYC'
+location = 'NH27-Part2'
+log = 'log/' + location
+if not os.path.exists(log):os.makedirs(log, exist_ok=True)
+timeinterval = 550
 locationurl = locations[location]
 
-import imageio 
+import imageio
 def make_gif(imagesli,datepath):
-    with imageio.get_writer(f'{gifs_folder}analysis_{datepath}.gif', mode='I',duration=0.1) as writer: 
-        for filename in imagesli: 
+    with imageio.get_writer(f'{gifs_folder}analysis_{datepath}.gif', mode='I',duration=0.1) as writer:
+        for filename in imagesli:
             image = imageio.imread(filename)
-            writer.append_data(image) 
+            writer.append_data(image)
 
     return f'{gifs_folder}analysis_{datepath}.gif'
 
@@ -55,10 +72,12 @@ def make_video(gifname,datepath):
     clip = mp.VideoFileClip(f"{gifname}")
     clip.write_videofile(f"{videos_folder}vid_{datepath}.mp4")
 
-def initiate():
+def initiate(baseimage=False):
 
     '''
-    yousufguda_location 
+    # Majestic https://www.google.com/maps/@12.9752159,77.5762682,14.75z/data=!5m1!1e1
+    # Brooklyn https://www.google.com/maps/@40.6516003,-73.9438822,13.25z/data=!5m1!1e1
+    yousufguda_location
     'https://www.google.com/maps/@17.4374383,78.4322134,16.75z/data=!5m1!1e1'
     HSR Layout location
     https://www.google.com/maps/@12.9185707,77.6398468,17z/data=!5m1!1e1
@@ -67,9 +86,10 @@ def initiate():
     Mehdipatnam
     https://www.google.com/maps/@17.391764,78.4354326,15.75z/data=!5m1!1e1
     '''
-    
-    driver.get(f'https://www.google.com/maps/@{",".join(locations[location][0:3])}/data=!5m1!1e1' )
-
+    if baseimage:
+        driver.get(f'https://www.google.com/maps/@{",".join(locations[location][0:3])}' )
+    else:
+        driver.get(f'https://www.google.com/maps/@{",".join(locations[location][0:3])}/data=!5m1!1e1' )
     try:
         waitgot = WebDriverWait(driver, 10)
         elem_gotit = waitgot.until(EC.element_to_be_clickable((By.XPATH, '//a[contains(@class, "gb_Kd gb_kd")]')))
@@ -94,26 +114,72 @@ def write_on_image(text,imgname):
     img = Image.open(imgname)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf', 40)
-    draw.rectangle((0, 0, 400, 120), fill='black')
+    draw.rectangle((0, 0, 460, 120), fill='black')
     draw.text((0, 0), text, (512, 512, 255), font=font)
     img.save(imgname)
+
+baseimagedict={}
+totalroadpixels = 0
+
+def pixel_density(path, pixels, timestamp,datepath):
+    img = np.array(Image.open(path).convert('RGB'))
+    w,h,_ = img.shape
+    d = {
+            'pixels': totalroadpixels,
+            'ts': timestamp
+        }
+
+    for n,v in pixels.items():
+        d[n] = (np.all(img == v, axis=2)).sum()
+
+    imgpath = os.path.basename(path).replace(".png","")
+
+    headerflag = False
+    if not os.path.exists(f'{log}/{datepath}_log.csv'): headerflag = True
+
+    with open(f'{log}/{datepath}_log.csv', 'a', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=['ts', 'pixels', 'low', 'med', 'high', 'vhigh'])
+        if headerflag:  writer.writeheader()
+        writer.writerow(d)
+        
+
+basecheck = True
 
 while True:
     # timenow = datetime.now().strftime("%d-%b (%H:%M:%S.%f)")
     timenow = datetime.now().astimezone(pytz.timezone(f'{locations[location][-1]}')).strftime("%b %dth %H:%M")
-    datepath = datetime.now().strftime("%b-%dth")
+    datepath = datetime.now().astimezone(pytz.timezone(f'{locations[location][-1]}')).strftime("%b-%dth")
     print('Current Timestamp : ', timenow)
     try:
-        initiate()
+        if basecheck: initiate(baseimage=True)
+        else: initiate()
     except:
         print("Problem loading the page. Timeout exception")
         time.sleep(120)
         continue
 
     img_storefolder =  f'{images_folder}{datepath}_{location}'
+    
     if not os.path.exists(img_storefolder):os.mkdir(img_storefolder)
-    driver.save_screenshot(f"{img_storefolder}/{timenow}.png"); time.sleep(2)
-    write_on_image(timenow+f'\n{location}',f"{img_storefolder}/{timenow}.png")
-    gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
-    make_video(gifname,f'{datepath}_{location}')
-    time.sleep(240)
+    
+    if basecheck: storedimagename = f"{img_storefolder}/baseimage.png"
+    else:storedimagename = f"{img_storefolder}/{timenow}.png"
+    driver.save_screenshot(storedimagename); time.sleep(2)
+    
+    write_on_image(timenow+f'\n{location}',storedimagename)
+    
+    if basecheck: 
+        img = np.array(Image.open(f"{img_storefolder}/baseimage.png").convert('RGB'))
+
+        for n,v in basepixels.items():
+            baseimagedict[n] = (np.all(img == v, axis=2)).sum()
+            totalroadpixels += baseimagedict[n]
+
+        basecheck=False
+    else:
+        pixel_density(f"{img_storefolder}/{timenow}.png", pixels, timenow, datepath)
+        # gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
+        # make_video(gifname,f'{datepath}_{location}')
+
+
+    time.sleep(timeinterval)
