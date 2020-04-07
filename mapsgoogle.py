@@ -178,8 +178,8 @@ while True:
         basecheck=False
     else:
         pixel_density(f"{img_storefolder}/{timenow}.png", pixels, timenow, datepath)
-        # gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
-        # make_video(gifname,f'{datepath}_{location}')
+        gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
+        make_video(gifname,f'{datepath}_{location}')
 
 
     time.sleep(timeinterval)
