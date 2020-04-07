@@ -94,6 +94,7 @@ def make_bar_graph(logfilename,storedbarname):
         plt.bar(heads,data)
         plt.title(f"{vals[ix][0]}")
         plt.savefig(storedbarname)
+        plt.close()
 
 def initiate(baseimage=False):
 
@@ -207,8 +208,8 @@ while True:
         make_bar_graph(logfilename,storedbarname)
         # gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
         # make_video(gifname,f'{datepath}_{location}')
-        make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),datepath,bar=True)
-        make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),datepath)
+        make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),f'{datepath}_{location}',bar=True)
+        make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),f'{datepath}_{location}')
 
 
     time.sleep(timeinterval)
