@@ -9,14 +9,18 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from datetime import datetime
 import numpy as np
+import pandas as pd
 import pytz
 import json
+import matplotlib.pyplot as plt
 from PIL import Image
 from PIL import ImageFont
 from PIL import ImageDraw
 import sys, os
 from glob import glob
 import moviepy.editor as mp
+from moviepy.editor import *
+
 # Reference :
 # https://stackoverflow.com/questions/41340792/change-google-map-web-page-with-selenium-python
 # https://stackoverflow.com/questions/18869365/a-watermark-inside-a-rectangle-which-filled-the-certain-color
@@ -56,7 +60,7 @@ with open('locations.json') as json_file:
 location = 'NH27-Part2'
 log = 'log/' + location
 if not os.path.exists(log):os.makedirs(log, exist_ok=True)
-timeinterval = 550
+timeinterval = 50
 locationurl = locations[location]
 
 import imageio
@@ -71,6 +75,25 @@ def make_gif(imagesli,datepath):
 def make_video(gifname,datepath):
     clip = mp.VideoFileClip(f"{gifname}")
     clip.write_videofile(f"{videos_folder}vid_{datepath}.mp4")
+
+def make_mp4(imgli,datepath,bar=False):
+    clips = [ImageClip(m).set_duration(0.1) for m in imgli]
+    concat_clip = concatenate_videoclips(clips, method="compose")
+    if bar: concat_clip.write_videofile(f"{videos_folder}barvid_{datepath}.mp4", fps=24) 
+    else: concat_clip.write_videofile(f"{videos_folder}vid_{datepath}.mp4", fps=24)
+
+def make_bar_graph(logfilename,storedbarname):
+    df = pd.read_csv(f"{logfilename}")
+    vals = df.values.tolist()
+    num_bars = df.shape[0]
+    heads = ['notraffic','mild','med','high','vhigh']
+    for ix in range(num_bars):
+        fig = plt.figure()
+        emptyroads = vals[ix][1] - sum(vals[ix][2:])
+        data = [emptyroads] + vals[ix][2:]
+        plt.bar(heads,data)
+        plt.title(f"{vals[ix][0]}")
+        plt.savefig(storedbarname)
 
 def initiate(baseimage=False):
 
@@ -137,11 +160,13 @@ def pixel_density(path, pixels, timestamp,datepath):
     headerflag = False
     if not os.path.exists(f'{log}/{datepath}_log.csv'): headerflag = True
 
-    with open(f'{log}/{datepath}_log.csv', 'a', newline='') as f:
+    logfilename = f'{log}/{datepath}_log.csv'
+    with open(logfilename, 'a', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=['ts', 'pixels', 'low', 'med', 'high', 'vhigh'])
         if headerflag:  writer.writeheader()
         writer.writerow(d)
-        
+    
+    return logfilename
 
 basecheck = True
 
@@ -177,9 +202,13 @@ while True:
 
         basecheck=False
     else:
-        pixel_density(f"{img_storefolder}/{timenow}.png", pixels, timenow, datepath)
-        gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
-        make_video(gifname,f'{datepath}_{location}')
+        logfilename = pixel_density(f"{img_storefolder}/{timenow}.png", pixels, timenow, datepath)
+        storedbarname = f"{img_storefolder}/bar_{timenow}.png"
+        make_bar_graph(logfilename,storedbarname)
+        # gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
+        # make_video(gifname,f'{datepath}_{location}')
+        make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),datepath,bar=True)
+        make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),datepath)
 
 
     time.sleep(timeinterval)
