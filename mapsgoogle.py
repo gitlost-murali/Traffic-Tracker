@@ -57,10 +57,12 @@ locations = dict()
 with open('locations.json') as json_file:
     locations = json.load(json_file)
 
-location = 'NH27-Part2'
+
+location = sys.argv[1] #'NH27-Part2'
+
 log = 'log/' + location
 if not os.path.exists(log):os.makedirs(log, exist_ok=True)
-timeinterval = 50
+timeinterval = 550
 locationurl = locations[location]
 
 import imageio
@@ -77,7 +79,8 @@ def make_video(gifname,datepath):
     clip.write_videofile(f"{videos_folder}vid_{datepath}.mp4")
 
 def make_mp4(imgli,datepath,bar=False):
-    clips = [ImageClip(m).set_duration(0.1) for m in imgli]
+    if bar==False:clips = [ImageClip(m).set_duration(0.1) for m in imgli if not (os.path.basename(m)).startswith('bar_') ]
+    else:clips = [ImageClip(m).set_duration(0.1) for m in imgli]
     concat_clip = concatenate_videoclips(clips, method="compose")
     if bar: concat_clip.write_videofile(f"{videos_folder}barvid_{datepath}.mp4", fps=24) 
     else: concat_clip.write_videofile(f"{videos_folder}vid_{datepath}.mp4", fps=24)
@@ -209,7 +212,7 @@ while True:
         # gifname = make_gif(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
         # make_video(gifname,f'{datepath}_{location}')
         make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),f'{datepath}_{location}',bar=True)
-        make_mp4(sorted(glob(f'{img_storefolder}/bar_*')),f'{datepath}_{location}')
+        make_mp4(sorted(glob(f'{img_storefolder}/*')),f'{datepath}_{location}')
 
 
     time.sleep(timeinterval)
