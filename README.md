@@ -21,4 +21,4 @@ Traffic after lockdown-phase1 end date
 ![Alt](resources/Apr-15th_log.png)
 
 
-![Alt](mehdipatnam.gif)
+![Alt](resources/mehdipatnam.gif)
